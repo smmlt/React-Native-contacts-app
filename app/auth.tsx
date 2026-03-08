@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 
 import {
-    ActivityIndicator,
-    Alert,
     StyleSheet,
     Text,
     TextInput,
@@ -10,48 +8,30 @@ import {
     View,
 } from "react-native";
 
-import Parse from "parse";
+import { auth } from "@/constants/FirebaseConfig";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+
 import { useRouter } from "expo-router";
 
 
 export default function AuthScreen() {
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isSignUp, setIsSignUp] = useState(false);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    const handleAuth = async () => {
-        if (!username || !password) {
-            Alert.alert("Помилка", "Будь ласка, заповніть всі поля");
-            return;
-        }
-        
-        setLoading(true);
-
-        try {
-            if (isSignUp) {
-                // Реєстрація користувача
-                const user = new Parse.User();
-                user.set("username", username);
-                user.set("password", password);
-                await user.signUp();
+    const handleAuth = async (type: "login" | "signup") => {
+        try{
+            if (type === "login") {
+                await signInWithEmailAndPassword(auth, email, password);
+            } else {
+                await createUserWithEmailAndPassword(auth, email, password);
             }
-            else {
-                // Авторизація користувача
-                await Parse.User.logIn(username, password);
-            }
-
-            setUsername("");
-            setPassword("");
-
-            router.replace("/");    
+            router.replace("/(tabs)");
         }
         catch (err: any) {
-            Alert.alert("Помилка авторизації", err.message || "Сталася помилка. Спробуйте ще раз.");
-        }
-        finally {
-            setLoading(false);
+            alert("Помилка авторизації: ${err.message}");
         }
     };
 
@@ -109,15 +89,13 @@ export default function AuthScreen() {
     return (
         <View style={styles.container}>
 
-            <Text style={styles.title}>
-                {isSignUp ? "Створити аккаунт" : "Увійти"}
-            </Text>
+            <Text style={styles.title}>Авторизація</Text>
 
             <TextInput
                 style={styles.input}
-                placeholder="Ім'я користувача"
-                value={username}
-                onChangeText={setUsername}
+                placeholder="Ваш email"
+                value={email}
+                onChangeText={setEmail}
                 autoCapitalize="none"
             />
             <TextInput
@@ -128,22 +106,12 @@ export default function AuthScreen() {
                 secureTextEntry
             />
 
-            <TouchableOpacity style={styles.button} onPress={handleAuth} disabled={loading}>
-                {loading ? (
-                        <ActivityIndicator color="#fff" />
-                    ) : (
-                        <Text style={styles.buttonText}>
-                            {isSignUp ? "Зареєструватися" : "Увійти"}
-                        </Text>
-                    )}
+            <TouchableOpacity style={styles.button} onPress={() => handleAuth("login")}>
+                <Text style={styles.buttonText}>Увійти</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)}>
-                <Text style={styles.switchText}>
-                    {isSignUp
-                        ? "Вже є акаунт? Увійти"
-                        : "Нема акаунту? Зареєструватися"}
-                </Text>
+            <TouchableOpacity style={{margin: 20}} onPress={() => handleAuth("signup")}>
+                <Text style={styles.switchText}>Створити аккаунт</Text>
             </TouchableOpacity>
 
         </View>
