@@ -1,9 +1,9 @@
-// import { Redirect } from "expo-router";
+import { Redirect } from "expo-router";
 
-// export default function Index() {
-//   return <Redirect href="/(tabs)" />;
-// }
+export default function Index() {
+  return <Redirect href="/(tabs)" />;
+}
 
-import AuthScreen from "./auth";
+// import AuthScreen from "./auth";
 
-export default AuthScreen;
+// export default AuthScreen;
