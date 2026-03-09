@@ -17,6 +17,7 @@ import { useRouter } from "expo-router";
 export default function AuthScreen() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [isSignUp, setIsSignUp] = useState(false);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -58,8 +59,19 @@ export default function AuthScreen() {
             borderColor: "#ccc",
             borderRadius: 8,
             paddingHorizontal: 10,
+            paddingRight: 45,
             marginVertical: 10,
             backgroundColor: "#fff",
+        },
+
+        passwordContainer: {
+            width: "100%",
+            justifyContent: "center",
+        },
+
+        eye: {
+            position: "absolute",
+            right: 15,
         },
 
         button: {
@@ -98,13 +110,22 @@ export default function AuthScreen() {
                 onChangeText={setEmail}
                 autoCapitalize="none"
             />
-            <TextInput
-                style={styles.input}
-                placeholder="Пароль"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
+            <View style={styles.passwordContainer}>
+                <TextInput
+                    style={styles.input}
+                    placeholder="Пароль"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                />
+
+                <TouchableOpacity
+                    style={styles.eye}
+                    onPress={() => setShowPassword(prev => !prev)}
+                >
+                    <Text>👁</Text>
+                </TouchableOpacity>
+            </View>
 
             <TouchableOpacity style={styles.button} onPress={() => handleAuth("login")}>
                 <Text style={styles.buttonText}>Увійти</Text>
