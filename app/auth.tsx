@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
 import {
+    ActivityIndicator,
     StyleSheet,
     Text,
     TextInput,
@@ -9,7 +10,7 @@ import {
 } from "react-native";
 
 import { auth } from "@/constants/FirebaseConfig";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 
 import { useRouter } from "expo-router";
 
@@ -19,20 +20,48 @@ export default function AuthScreen() {
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [isSignUp, setIsSignUp] = useState(false);
+
     const [loading, setLoading] = useState(false);
+    const [isLoginMode, setIsLoginMode] = useState(true);
+
     const router = useRouter();
 
-    const handleAuth = async (type: "login" | "signup") => {
+    const handleAuth = async () => {
+
+        if (!email || !password) {
+            alert("Будь ласка, введіть email та пароль");
+            return;
+        }
+        setLoading(true);
+
         try{
-            if (type === "login") {
+            if (isLoginMode) {
                 await signInWithEmailAndPassword(auth, email, password);
+                alert("Успішний вхід!");
             } else {
                 await createUserWithEmailAndPassword(auth, email, password);
+                alert("Аккаунт успішно створено!");
             }
             router.replace("/(tabs)");
         }
         catch (err: any) {
-            alert("Помилка авторизації: ${err.message}");
+            let message = "Сталась помилка. Спробуйте ще раз.";
+            if (err.code === "auth/email-already-in-use") {
+                message = "Цей email вже використовується.";
+            } 
+            if (err.code === "auth/invalid-email") {
+                message = "Невірний формат email.";
+            }
+            if (err.code === "auth/weak-password") {
+                message = "Пароль має бути не менше 6 символів.";
+            }
+            if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
+                message = "Невірний email або пароль.";
+            }
+            alert(message);
+        }
+        finally {
+            setLoading(false);
         }
     };
 
@@ -43,6 +72,11 @@ export default function AuthScreen() {
             alignItems: "center",
             paddingHorizontal: 20,
             backgroundColor: "#f5f5f5",
+        },
+
+        form: {
+            width: "100%",
+            marginBottom: 20,
         },
 
         title: {
@@ -90,6 +124,10 @@ export default function AuthScreen() {
             fontWeight: "bold",
         },
 
+        switchBtn: {
+            marginTop: 20,
+        },
+
         switchText: {
             color: "#4a90e2",
             marginTop: 15,
@@ -101,38 +139,54 @@ export default function AuthScreen() {
     return (
         <View style={styles.container}>
 
-            <Text style={styles.title}>Авторизація</Text>
+            <Text style={styles.title}>
+                {isLoginMode ? "Увійти в аккаунт" : "Створити аккаунт"}
+            </Text>
 
-            <TextInput
+            <View style={styles.form} >
+
+                <TextInput
                 style={styles.input}
                 placeholder="Ваш email"
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
-            />
-            <View style={styles.passwordContainer}>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Пароль"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
+                keyboardType="email-address"
                 />
+                <View style={styles.passwordContainer}>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Пароль"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={!showPassword}
+                    />
 
-                <TouchableOpacity
-                    style={styles.eye}
-                    onPress={() => setShowPassword(prev => !prev)}
-                >
-                    <Text>👁</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.eye}
+                        onPress={() => setShowPassword(prev => !prev)}
+                    >
+                        <Text>👁</Text>
+                    </TouchableOpacity>
+                </View>
+
             </View>
+            
 
-            <TouchableOpacity style={styles.button} onPress={() => handleAuth("login")}>
-                <Text style={styles.buttonText}>Увійти</Text>
+            <TouchableOpacity style={styles.button} onPress={handleAuth} disabled={loading}>
+                {loading ? (
+                    <ActivityIndicator color="#fff" /> 
+                ) : (
+                    <Text style={styles.buttonText}>
+                        {isLoginMode ? "Увійти" : "Зареєструватися"}
+                    </Text>
+                )}
             </TouchableOpacity>
 
-            <TouchableOpacity style={{margin: 20}} onPress={() => handleAuth("signup")}>
-                <Text style={styles.switchText}>Створити аккаунт</Text>
+            <TouchableOpacity style={styles.switchBtn} onPress={() => setIsLoginMode(!isLoginMode)}>
+                <Text style={styles.switchText}>
+                    {isLoginMode ? "Немає аккаунту? Створити" : "Вже є аккаунт? Увійти"}
+                </Text>
             </TouchableOpacity>
 
         </View>
