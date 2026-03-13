@@ -25,7 +25,8 @@ export default function ContactsScreen() {
             setContacts(querySnapshot.docs.map(d => ({
                 id: d.id,
                 ...d.data()
-            })))
+            })));
+            console.log(contacts);
         }
         catch (err) {
             console.error("Error fetching contacts:", err);
@@ -46,8 +47,78 @@ export default function ContactsScreen() {
         fetchContacts();
     }, []);
 
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1, 
+            backgroundColor: "#f5f5f5",
+            paddingLeft: 10,
+        },
+
+        itemStyle: {
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: 20,
+            backgroundColor: "#fff",
+            marginVertical: 1,
+        },
+
+        name: {
+            fontSize: 18,
+            fontWeight: "bold",
+
+        },
+
+        phone: {
+            color: "#666",
+
+        }
+
+
+    });
+
+
     return (
-        <View>
+        <View style={styles.container}>
+            <Stack.Screen
+                options={{
+                    title: "Контакти",
+                    headerRight: () => (
+                         <TouchableOpacity onPress={() => router.push("../edit-contact")}>
+                            <Ionicons name="add-circle" size={30} color="#2196f3" />
+                        </TouchableOpacity>
+                    )
+                }}
+            />
+
+            <FlatList
+                data={contacts}
+                refreshControl={
+                    <RefreshControl refreshing={loading} onRefresh={fetchContacts} />
+                }
+                renderItem={({ item }) => (
+                    <TouchableOpacity
+                        style={styles.itemStyle}
+                        onPress={() => {
+                            router.push({
+                                pathname: "../edit",
+                                params: { id: item.id }
+                            })
+                        }}
+                    >
+                        <View>
+                            <Text style={styles.name}>{item.name}</Text>
+                            <Text style={styles.phone}>{item.city}</Text>
+                            <Text style={styles.phone}>{item.email}</Text>
+                            <Text style={styles.phone}>{item.phone}</Text>
+                        </View>
+                        <TouchableOpacity onPress={() => handleDelete(item.id)}>
+                            <Ionicons name="trash-outline" size={22} color="red" />
+                        </TouchableOpacity>
+                    </TouchableOpacity>
+                )}
+            />
+            
             <Text>Список контактів</Text>
         </View>
     )
