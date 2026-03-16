@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity } from "react-native";
+import { View, Text, FlatList, StyleSheet, RefreshControl, TouchableOpacity, Alert } from "react-native";
 import { db, auth } from "../../constants/FirebaseConfig";
 
 import { collection, query, where, getDocs, deleteDoc, doc, orderBy } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, Stack } from "expo-router";
 
@@ -14,6 +15,7 @@ export default function ContactsScreen() {
 
     const fetchContacts = async () => {
         if (!auth.currentUser) return;
+        console.log("Auth UID:", auth.currentUser.uid); // ← добавить сюда
         setLoading(true);
         try {
             const q = query(
@@ -22,11 +24,18 @@ export default function ContactsScreen() {
                 orderBy("name", "asc")
             );
             const querySnapshot = await getDocs(q);
-            setContacts(querySnapshot.docs.map(d => ({
+
+            querySnapshot.docs.forEach(d => {
+                console.log("Doc ID:", d.id);
+                console.log("Doc userId:", d.data().userId);
+            });
+
+            const data = querySnapshot.docs.map(d => ({
                 id: d.id,
                 ...d.data()
-            })));
-            console.log(contacts);
+            }));
+
+            setContacts(data);
         }
         catch (err) {
             console.error("Error fetching contacts:", err);
@@ -37,14 +46,28 @@ export default function ContactsScreen() {
     };
 
     const handleDelete = (id: string) => {
-        if (confirm("Ви впевнені, що хочете видалити цей контакт?")) {
-            deleteDoc(doc(db, "contacts", id))
-            setContacts(prev => prev.filter(c => c.id !== id));
-        }
+        Alert.alert(
+            "Підтвердження",
+            "Ви впевнені, що хочете видалити цей контакт?",
+            [
+                { text: "Скасувати", style: "cancel" },
+                { text: "Видалити", onPress: () => {
+                    deleteDoc(doc(db, "contacts", id));
+                    setContacts(prev => prev.filter(c => c.id !== id));
+                }}
+            ]
+        );
     };
 
     useEffect(() => {
-        fetchContacts();
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                fetchContacts();
+            } else {
+                setContacts([]);
+            }
+        });
+        return unsubscribe;
     }, []);
 
     const styles = StyleSheet.create({
@@ -84,7 +107,7 @@ export default function ContactsScreen() {
                 options={{
                     title: "Контакти",
                     headerRight: () => (
-                         <TouchableOpacity onPress={() => router.push("../edit-contact")}>
+                         <TouchableOpacity onPress={() => router.push("../edit")}>
                             <Ionicons name="add-circle" size={30} color="#2196f3" />
                         </TouchableOpacity>
                     )
@@ -117,9 +140,16 @@ export default function ContactsScreen() {
                         </TouchableOpacity>
                     </TouchableOpacity>
                 )}
+                ListEmptyComponent={
+                    !loading ? (
+                        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 50 }}>
+                            <Text style={{ fontSize: 18, color: '#666' }}>Немає контактів</Text>
+                        </View>
+                    ) : null
+                }
             />
             
-            <Text>Список контактів</Text>
+            {loading && <Text>Завантаження...</Text>}
         </View>
     )
 }

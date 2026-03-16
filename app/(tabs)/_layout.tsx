@@ -12,7 +12,7 @@ export default function TabLayout() {
                 tabBarStyle: {
                     borderTopWidth: 1,
                     borderTopColor: "#eee",
-                    height: Platform.OS === "ios" ? 30 : 10,
+                    height: 55,
                 },
                 headerStyle: {
                     backgroundColor: "#fff",
