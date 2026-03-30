@@ -6,12 +6,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { getReactNativePersistence } from '@firebase/auth/dist/rn/index.js';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAoe8JcGm-UnjFxC5MUeADJJk1XaVwxAWU",
-  authDomain: "contacts-app-b6ce3.firebaseapp.com",
-  projectId: "contacts-app-b6ce3",
-  storageBucket: "contacts-app-b6ce3.firebasestorage.app",
-  messagingSenderId: "864143822435",
-  appId: "1:864143822435:web:ed5bafb33f78d1b0763256"
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
